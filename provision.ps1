@@ -19,6 +19,93 @@ function choco {
     Start-Choco $Args
 }
 
+# define the process privilege manipulation function.
+Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+using System.ComponentModel;
+
+public class ProcessPrivileges
+{
+    [DllImport("advapi32.dll", SetLastError = true)]
+    static extern bool LookupPrivilegeValue(string host, string name, ref long luid);
+
+    [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
+    static extern bool AdjustTokenPrivileges(IntPtr token, bool disableAllPrivileges, ref TOKEN_PRIVILEGES newState, int bufferLength, IntPtr previousState, IntPtr returnLength);
+
+    [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
+    static extern bool OpenProcessToken(IntPtr processHandle, int desiredAccess, ref IntPtr processToken);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool CloseHandle(IntPtr handle);
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    struct TOKEN_PRIVILEGES
+    {
+        public int PrivilegeCount;
+        public long Luid;
+        public int Attributes;
+    }
+
+    const int SE_PRIVILEGE_ENABLED     = 0x00000002;
+    const int SE_PRIVILEGE_DISABLED    = 0x00000000;
+
+    const int TOKEN_QUERY              = 0x00000008;
+    const int TOKEN_ADJUST_PRIVILEGES  = 0x00000020;
+
+    public static void EnablePrivilege(IntPtr processHandle, string privilegeName, bool enable)
+    {
+        var processToken = IntPtr.Zero;
+
+        if (!OpenProcessToken(processHandle, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref processToken))
+        {
+            throw new Win32Exception();
+        }
+
+        try
+        {
+            var privileges = new TOKEN_PRIVILEGES
+            {
+                PrivilegeCount = 1,
+                Luid = 0,
+                Attributes = enable ? SE_PRIVILEGE_ENABLED : SE_PRIVILEGE_DISABLED,
+            };
+            
+            if (!LookupPrivilegeValue(null, privilegeName, ref privileges.Luid))
+            {
+                throw new Win32Exception();
+            }
+
+            if (!AdjustTokenPrivileges(processToken, false, ref privileges, 0, IntPtr.Zero, IntPtr.Zero))
+            {
+                throw new Win32Exception();
+            }
+        }
+        finally
+        {
+            CloseHandle(processToken);
+        }
+    }
+}
+'@
+function Enable-ProcessPrivilege {
+    param(
+        # see https://msdn.microsoft.com/en-us/library/bb530716(VS.85).aspx
+        [string]$privilegeName,
+        [int]$processId = $PID,
+        [Switch][bool]$disable
+    )
+    $process = Get-Process -Id $processId
+    try {
+        [ProcessPrivileges]::EnablePrivilege(
+            $process.Handle,
+            $privilegeName,
+            !$disable)
+    } finally {
+        $process.Close()
+    }
+}
+
 # set keyboard layout.
 # NB you can get the name from the list:
 #      [Globalization.CultureInfo]::GetCultures('InstalledWin32Cultures') | Out-GridView
@@ -26,6 +113,40 @@ Set-WinUserLanguageList pt-PT -Force
 
 # set the date format, number format, etc.
 Set-Culture pt-PT
+
+# set the welcome screen culture and keyboard layout.
+# NB the .DEFAULT key is for the local SYSTEM account (S-1-5-18).
+New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS | Out-Null
+'Control Panel\International','Keyboard Layout' | ForEach-Object {
+    Remove-Item -Path "HKU:.DEFAULT\$_" -Recurse -Force
+    Copy-Item -Path "HKCU:$_" -Destination "HKU:.DEFAULT\$_" -Recurse -Force
+}
+
+# set the user lock screen culture.
+Enable-ProcessPrivilege SeTakeOwnershipPrivilege
+$accountSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+$accountLocaleRegistryKeyName = "SOFTWARE\Microsoft\Windows\CurrentVersion\SystemProtectedUserData\$accountSid\AnyoneRead\LocaleInfo"
+$key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($accountLocaleRegistryKeyName, 'ReadWriteSubTree', 'TakeOwnership')
+$acl = $key.GetAccessControl('None')
+$acl.SetOwner([Security.Principal.NTAccount]'Administrators')
+$key.SetAccessControl($acl)
+Enable-ProcessPrivilege SeTakeOwnershipPrivilege -Disable
+$acl = $key.GetAccessControl()
+$acl.SetAccessRule((New-Object Security.AccessControl.RegistryAccessRule('Administrators', 'FullControl', 'ContainerInherit', 'None', 'Allow')))
+$key.SetAccessControl($acl)
+$key.Close()
+Set-ItemProperty `
+    -Path "HKLM:$accountLocaleRegistryKeyName" `
+    -Name Language `
+    -Value (Get-ItemProperty -Path 'HKCU:Control Panel\International' -Name LocaleName).LocaleName
+Set-ItemProperty `
+    -Path "HKLM:$accountLocaleRegistryKeyName" `
+    -Name LocaleName `
+    -Value (Get-ItemProperty -Path 'HKCU:Control Panel\International' -Name LocaleName).LocaleName
+Set-ItemProperty `
+    -Path "HKLM:$accountLocaleRegistryKeyName" `
+    -Name TimeFormat `
+    -Value (Get-ItemProperty -Path 'HKCU:Control Panel\International' -Name sShortTime).sShortTime
 
 # set the timezone.
 # tzutil /l lists all available timezone ids
