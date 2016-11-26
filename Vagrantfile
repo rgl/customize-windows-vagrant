@@ -14,7 +14,7 @@ Vagrant.configure(2) do |config|
       "--type", "dvddrive",
       "--medium", "emptydrive"]
   end
-  config.vm.provision "shell", inline: "$env:chocolateyVersion='0.10.0'; iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex", name: "Install Chocolatey"
+  config.vm.provision "shell", inline: "$env:chocolateyVersion='0.10.3'; iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex", name: "Install Chocolatey"
   config.vm.provision "shell", path: "provision.ps1"
   config.vm.provision :reload
 end
