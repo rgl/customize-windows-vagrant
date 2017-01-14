@@ -216,12 +216,18 @@ $acl = $key.GetAccessControl()
 $acl.SetAccessRule((New-Object Security.AccessControl.RegistryAccessRule('Administrators', 'FullControl', 'Allow')))
 $key.SetAccessControl($acl)
 mkdir $accountPictureBasePath | Out-Null
-$accountPicturePath = "$accountPictureBasePath\vagrant.png"
-Copy-Item -Force C:\vagrant\vagrant.png $accountPicturePath
-# NB we are using the same image for all the resolutions, but for better
+New-Item $accountRegistryKeyPath | Out-Null
+# NB we are resizing the same image for all the resolutions, but for better
 #    results, you should use images with different resolutions.
+Add-Type -AssemblyName System.Drawing
+$accountImage = [System.Drawing.Image]::FromFile("c:\vagrant\vagrant.png")
 40,96,200,240,448 | ForEach-Object {
-    New-ItemProperty -Path $accountRegistryKeyPath -Name "Image$_" -Value $accountPicturePath -Force | Out-Null
+    $p = "$accountPictureBasePath\Image$($_).jpg"
+    $i = New-Object System.Drawing.Bitmap($_, $_)
+    $g = [System.Drawing.Graphics]::FromImage($i)
+    $g.DrawImage($accountImage, 0, 0, $_, $_)
+    $i.Save($p)
+    New-ItemProperty -Path $accountRegistryKeyPath -Name "Image$_" -Value $p -Force | Out-Null
 }
 
 # install classic shell.
