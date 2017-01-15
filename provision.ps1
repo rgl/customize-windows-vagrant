@@ -108,6 +108,9 @@ New-Item -Path HKCU:Software\Microsoft\Windows\CurrentVersion\RunOnce -Force `
     | New-ItemProperty -Name ConfigureTaskbar -Value 'PowerShell -WindowStyle Hidden -File "%TEMP%\ConfigureTaskbar.ps1"' -PropertyType ExpandString `
     | Out-Null
 
+# set default Explorer location to This PC.
+Set-ItemProperty -Path HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name LaunchTo -Value 1
+
 # display full path in the title bar.
 New-Item -Path HKCU:Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState -Force `
     | New-ItemProperty -Name FullPath -Value 1 -PropertyType DWORD `

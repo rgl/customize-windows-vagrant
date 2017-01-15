@@ -12,6 +12,7 @@ This shows ways to programmatically customize Windows 2016 through PowerShell. F
 * Replace notepad with [notepad2](http://www.flos-freeware.ch/notepad2.html).
 * Replace the Start Menu with [Classic Shell](http://www.classicshell.net/).
 
+For more customization options see [Disassembler0/Win10-Initial-Setup-Script/Win10.ps1](https://github.com/Disassembler0/Win10-Initial-Setup-Script/blob/master/Win10.ps1).
 
 # Base Box
 
