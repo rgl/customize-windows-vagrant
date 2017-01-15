@@ -150,6 +150,10 @@ $accountImage = [System.Drawing.Image]::FromFile("c:\vagrant\vagrant.png")
     New-ItemProperty -Path $accountRegistryKeyPath -Name "Image$_" -Value $p -Force | Out-Null
 }
 
+# enable audio.
+Set-Service Audiosrv -StartupType Automatic
+Start-Service Audiosrv
+
 # install classic shell.
 New-Item -Path HKCU:Software\IvoSoft\ClassicStartMenu -Force `
     | New-ItemProperty -Name ShowedStyle2      -Value 1 -PropertyType DWORD `

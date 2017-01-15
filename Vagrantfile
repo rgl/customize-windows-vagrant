@@ -13,6 +13,17 @@ Vagrant.configure(2) do |config|
       "--port", 1,
       "--type", "dvddrive",
       "--medium", "emptydrive"]
+    audio_driver = case RUBY_PLATFORM
+      when /linux/
+        "alsa"
+      when /darwin/
+        "coreaudio"
+      when /mswin|mingw|cygwin/
+        "dsound"
+      else
+        raise "Unknown RUBY_PLATFORM=#{RUBY_PLATFORM}"
+      end
+    vb.customize ["modifyvm", :id, "--audio", audio_driver, "--audiocontroller", "hda"]
   end
   config.vm.provision "shell", inline: "$env:chocolateyVersion='0.10.3'; iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex", name: "Install Chocolatey"
   config.vm.provision "shell", path: "provision.ps1"
