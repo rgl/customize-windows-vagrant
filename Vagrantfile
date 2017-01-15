@@ -3,7 +3,9 @@ Vagrant.configure(2) do |config|
   config.vm.provider "virtualbox" do |vb|
     vb.linked_clone = true
     vb.memory = 2048
-    vb.customize ["modifyvm", :id, "--vram", 64]
+    vb.customize ["modifyvm", :id, "--vram", 256]
+    vb.customize ["modifyvm", :id, "--accelerate3d", "on"]
+    vb.customize ["modifyvm", :id, "--accelerate2dvideo", "on"]
     vb.customize ["modifyvm", :id, "--clipboard", "bidirectional"]
     vb.customize ["modifyvm", :id, "--draganddrop", "bidirectional"]
     vb.customize [
