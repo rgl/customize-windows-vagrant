@@ -1,8 +1,23 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "windows-2016-amd64"
+  config.vm.provider "libvirt" do |lv|
+    lv.memory = 2048
+    lv.cpus = 2
+    lv.cpu_mode = "host-passthrough"
+    lv.nested = true
+    lv.keymap = "pt"
+    # replace the default synced_folder with something that works in cygwin.
+    # NB for some reason, this does not work when placed in the base box Vagrantfile.
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.synced_folder ".", "/cygdrive/c/vagrant", rsync__exclude: [
+      ".vagrant/",
+      ".git/",
+      "*.box"]
+  end
   config.vm.provider "virtualbox" do |vb|
     vb.linked_clone = true
     vb.memory = 2048
+    vb.cpus = 2
     vb.customize ["modifyvm", :id, "--vram", 256]
     vb.customize ["modifyvm", :id, "--accelerate3d", "on"]
     vb.customize ["modifyvm", :id, "--accelerate2dvideo", "on"]
