@@ -1,6 +1,6 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "windows-2016-amd64"
-  config.vm.provider "libvirt" do |lv|
+  config.vm.provider "libvirt" do |lv, config|
     lv.memory = 2048
     lv.cpus = 2
     lv.cpu_mode = "host-passthrough"
@@ -14,7 +14,7 @@ Vagrant.configure(2) do |config|
       ".git/",
       "*.box"]
   end
-  config.vm.provider "virtualbox" do |vb|
+  config.vm.provider "virtualbox" do |vb, config|
     vb.linked_clone = true
     vb.memory = 2048
     vb.cpus = 2
