@@ -1,19 +1,15 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "windows-2016-amd64"
+
   config.vm.provider "libvirt" do |lv, config|
     lv.memory = 2048
     lv.cpus = 2
     lv.cpu_mode = "host-passthrough"
     lv.nested = true
     lv.keymap = "pt"
-    # replace the default synced_folder with something that works in cygwin.
-    # NB for some reason, this does not work when placed in the base box Vagrantfile.
-    config.vm.synced_folder ".", "/vagrant", disabled: true
-    config.vm.synced_folder ".", "/cygdrive/c/vagrant", rsync__exclude: [
-      ".vagrant/",
-      ".git/",
-      "*.box"]
+    config.vm.synced_folder ".", "/vagrant", type: "smb", smb_username: ENV["USER"], smb_password: ENV["VAGRANT_SMB_PASSWORD"]
   end
+
   config.vm.provider "virtualbox" do |vb, config|
     vb.linked_clone = true
     vb.memory = 2048
@@ -42,6 +38,7 @@ Vagrant.configure(2) do |config|
       end
     vb.customize ["modifyvm", :id, "--audio", audio_driver, "--audiocontroller", "hda"]
   end
+
   config.vm.provision "shell", inline: "$env:chocolateyVersion='0.10.11'; iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex", name: "Install Chocolatey"
   config.vm.provision "shell", path: "provision.ps1"
   config.vm.provision :reload
