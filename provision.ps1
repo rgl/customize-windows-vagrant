@@ -187,6 +187,6 @@ Import-Module C:\ProgramData\chocolatey\helpers\chocolateyInstaller.psm1
 
 # add Services shortcut to the Desktop.
 Install-ChocolateyShortcut `
-  -ShortcutFilePath "$env:USERPROFILE\Desktop\Services.lnk" `
-  -TargetPath "$env:windir\system32\services.msc" `
-  -Description 'Windows Services'
+    -ShortcutFilePath "$env:USERPROFILE\Desktop\Services.lnk" `
+    -TargetPath "$env:windir\system32\services.msc" `
+    -Description 'Windows Services'
