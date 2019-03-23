@@ -42,5 +42,5 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", inline: "$env:chocolateyVersion='0.10.11'; iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex", name: "Install Chocolatey"
   config.vm.provision "shell", path: "provision.ps1"
   config.vm.provision "shell", path: "provision-example-services.ps1"
-  config.vm.provision :reload
+  config.vm.provision "shell", inline: "echo 'Rebooting...'", reboot: true
 end

@@ -18,13 +18,7 @@ For more customization options see [Disassembler0/Win10-Initial-Setup-Script/Win
 
 Install the [Windows 2019 Base Box](https://github.com/rgl/windows-2016-vagrant).
 
-Install the needed plugins:
-
-```bash
-vagrant plugin install vagrant-reload # https://github.com/aidanns/vagrant-reload
-```
-
-Then start this environment:
+Start this environment:
 
 ```bash
 vagrant up
