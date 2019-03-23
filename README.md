@@ -1,6 +1,6 @@
 # About
 
-This shows ways to programmatically customize Windows 2016 through PowerShell. For example:
+This shows ways to programmatically customize Windows 2019 through PowerShell. For example:
 
 * Change the System Culture, Keyboard Layout and Time Zone.
 * Change the Account Picture.
@@ -17,7 +17,7 @@ For more customization options see [Disassembler0/Win10-Initial-Setup-Script/Win
 
 # Base Box
 
-Install the [Windows 2016 Base Box](https://github.com/rgl/windows-2016-vagrant).
+Install the [Windows 2019 Base Box](https://github.com/rgl/windows-2016-vagrant).
 
 Install the needed plugins:
 
