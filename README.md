@@ -8,7 +8,8 @@ This shows ways to programmatically customize Windows 2019 through PowerShell. F
 * Configure Explorer to show hidden and protected files.
 * Configure the Taskbar.
 * Create Desktop Shortcuts.
-* Install Googe Chrome and Extensions.
+* Install Google Chrome and Extensions.
+* Set the default browser to Google Chrome.
 * Replace notepad with [notepad2](http://www.flos-freeware.ch/notepad2.html).
 * Create example services (using the SYSTEM account, a managed account, and a local user account).
 

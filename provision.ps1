@@ -165,6 +165,10 @@ cp -Force c:\vagrant\GoogleChrome-external_extensions.json (Get-Item "$chromeLoc
 cp -Force c:\vagrant\GoogleChrome-master_preferences.json "$chromeLocation\master_preferences"
 cp -Force c:\vagrant\GoogleChrome-master_bookmarks.html "$chromeLocation\master_bookmarks.html"
 
+# set default applications.
+choco install -y SetDefaultBrowser
+SetDefaultBrowser HKLM "Google Chrome"
+
 # replace notepad with notepad2.
 choco install -y notepad2
 
@@ -175,8 +179,12 @@ del "$env:USERPROFILE\Desktop\*" -Force
 # load Chocolatey helper functions.
 Import-Module C:\ProgramData\chocolatey\helpers\chocolateyInstaller.psm1
 
-# add Services shortcut to the Desktop.
+# add shortcuts to the Desktop.
 Install-ChocolateyShortcut `
     -ShortcutFilePath "$env:USERPROFILE\Desktop\Services.lnk" `
     -TargetPath "$env:windir\system32\services.msc" `
     -Description 'Windows Services'
+[IO.File]::WriteAllText("$env:USERPROFILE\Desktop\customize-windows-vagrant.url", @"
+[InternetShortcut]
+URL=https://github.com/rgl/customize-windows-vagrant
+"@)
