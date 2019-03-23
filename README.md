@@ -10,7 +10,6 @@ This shows ways to programmatically customize Windows 2019 through PowerShell. F
 * Create Desktop Shortcuts.
 * Install Googe Chrome and Extensions.
 * Replace notepad with [notepad2](http://www.flos-freeware.ch/notepad2.html).
-* Replace the Start Menu with [Classic Shell](http://www.classicshell.net/).
 * Create example services (using the SYSTEM account, a managed account, and a local user account).
 
 For more customization options see [Disassembler0/Win10-Initial-Setup-Script/Win10.ps1](https://github.com/Disassembler0/Win10-Initial-Setup-Script/blob/master/Win10.ps1).
