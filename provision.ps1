@@ -120,11 +120,101 @@ New-Item -Path HKCU:Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetSt
     | Out-Null
 
 # set desktop background.
-Copy-Item C:\vagrant\windows.png C:\Windows\Web\Wallpaper\Windows
-Set-ItemProperty -Path 'HKCU:Control Panel\Desktop' -Name Wallpaper -Value C:\Windows\Web\Wallpaper\Windows\windows.png
-Set-ItemProperty -Path 'HKCU:Control Panel\Desktop' -Name WallpaperStyle -Value 0
-Set-ItemProperty -Path 'HKCU:Control Panel\Desktop' -Name TileWallpaper -Value 0
-Set-ItemProperty -Path 'HKCU:Control Panel\Colors' -Name Background -Value '30 30 30'
+#Copy-Item C:\vagrant\windows.png C:\Windows\Web\Wallpaper\Windows
+#Set-ItemProperty -Path 'HKCU:Control Panel\Desktop' -Name Wallpaper -Value C:\Windows\Web\Wallpaper\Windows\windows.png
+#Set-ItemProperty -Path 'HKCU:Control Panel\Desktop' -Name WallpaperStyle -Value 0
+#Set-ItemProperty -Path 'HKCU:Control Panel\Desktop' -Name TileWallpaper -Value 0
+#Set-ItemProperty -Path 'HKCU:Control Panel\Colors' -Name Background -Value '30 30 30'
+# TODO sync this with https://github.com/rgl/openssh-server-windows-vagrant/blob/932d2885a172aab69547d2c70c55099975ad18f4/provision-common.ps1#L34
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+
+public class WallpaperInterop
+{
+    [DllImport("User32.dll", CharSet=CharSet.Unicode)]
+    public static extern int SystemParametersInfo(
+        Int32 uAction,
+        Int32 uParam,
+        String lpvParam,
+        Int32 fuWinIni);
+
+    [DllImport("User32.dll", CharSet=CharSet.Unicode)]
+    public static extern bool SetSysColors(
+        int cElements,
+        int[] lpaElements,
+        int[] lpaRgbValues);
+}
+'@
+function Set-Wallpaper {
+    param (
+        [Parameter(Mandatory = $True)]
+        [string]$Path,
+        [Parameter(Mandatory = $True)]
+        [ValidateSet(
+            'Fill',
+            'Fit',
+            'Stretch',
+            'Tile',
+            'Center',
+            'Span')]
+        [string]$Style,
+        [Parameter(Mandatory = $True)]
+        [int]$BackgroundColor
+    )
+
+    $wallpaperStyle = switch ($Style) {
+        'Fill' { '10' }
+        'Fit' { '6' }
+        'Stretch' { '2' }
+        'Span' { '22' }
+        default { '0' }
+    }
+
+    New-ItemProperty `
+        -Path 'HKCU:\Control Panel\Desktop' `
+        -Name WallpaperStyle `
+        -PropertyType String `
+        -Value $wallpaperStyle `
+        -Force `
+        | Out-Null
+    New-ItemProperty `
+        -Path 'HKCU:\Control Panel\Desktop' `
+        -Name TileWallpaper `
+        -PropertyType String `
+        -Value "$(if ($Style -eq 'Tile') {'1'} else {'0'})" `
+        -Force `
+        | Out-Null
+
+    $COLOR_BACKGROUND = 1
+    [WallpaperInterop]::SetSysColors(
+        1,
+        @($COLOR_BACKGROUND),
+        @($BackgroundColor)) `
+        | Out-Null
+
+    $SPI_SETDESKWALLPAPER = 0x0014
+    $SPIF_UPDATEINIFILE = 0x01
+    $SPIF_SENDCHANGE = 0x02
+    [WallpaperInterop]::SystemParametersInfo(
+        $SPI_SETDESKWALLPAPER,
+        0,
+        $Path,
+        $SPIF_UPDATEINIFILE -bor $SPIF_SENDCHANGE) `
+        | Out-Null
+}
+Add-Type -AssemblyName System.Drawing
+$wallpaperPath = 'C:\vagrant\windows.png'
+$wallpaperImage = [System.Drawing.Image]::FromFile($wallpaperPath)
+$wallpaperBackgroundPixel = $wallpaperImage.GetPixel(0, 0)
+$wallpaperBackgroundColor = ([int]$wallpaperBackgroundPixel.R) -bor
+                            ([int]$wallpaperBackgroundPixel.G -shl 8) -bor
+                            ([int]$wallpaperBackgroundPixel.B -shl 16)
+$wallpaperImage.Dispose()
+Set-Wallpaper `
+    -Path $wallpaperPath `
+    -Style 'Center' `
+    -BackgroundColor $wallpaperBackgroundColor
 
 # set lock screen background.
 Copy-Item C:\vagrant\windows.png C:\Windows\Web\Screen
